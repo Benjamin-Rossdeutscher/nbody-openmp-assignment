@@ -12,12 +12,15 @@ def read_ascii_file(filename):
             }
     # load data 
     data['timestep'], data['id'] = np.loadtxt(filename, dtype = int, usecols = [0,2], unpack=True)
-    data['time'], data['m'], data['r'], data['x'], data['y'], data['z'], data['vx'], data['vy'], data['vz'], data['ax'], data['ay'], data['az'] = np.loadtxt(filename, dtype = np.float64, usecols = [1,2,3,4,5,6,7,8,9,10,11,12], unpack=True)
+    data['time'], data['m'], data['r'], data['x'], data['y'], data['z'], data['vx'], data['vy'], data['vz'], data['ax'], data['ay'], data['az'] = np.loadtxt(filename, dtype = np.float64, usecols = [1,3,4,5,6,7,8,9,10,11,12,13], unpack=True)
     nparts = np.max(data['id'])
     nsteps = np.max(data['timestep'])+1
     return nparts,nsteps,data
 
-def plot_scatter(nsteps, nparts, data, basefilename = 'plots/nbody-scatter-plot'):
+def plot_scatter(nsteps, nparts, data, 
+                 cleanplots = True,
+                 basefilename = 'plots/nbody-scatter-plot', 
+                 ):
     cmap = plt.get_cmap('viridis')
     sample_values = np.linspace(0, 1, nsteps)  # Example: 10 sample values ranging from 0 to 1
     sample_colors = cmap(sample_values)
@@ -30,6 +33,7 @@ def plot_scatter(nsteps, nparts, data, basefilename = 'plots/nbody-scatter-plot'
     slim = [np.min(data['m']),np.max(data['m'])]
     for i in range(nsteps):
         c = sample_colors[i]
+        c = 'Blue'
         gs = plt.GridSpec(2, 2, figure=fig)
         ax1 = fig.add_subplot(gs[0, 0])
         ax2 = fig.add_subplot(gs[0, 1])
@@ -43,19 +47,71 @@ def plot_scatter(nsteps, nparts, data, basefilename = 'plots/nbody-scatter-plot'
         ax1.scatter(xdata, ydata, s=sdata, marker='o', facecolor=c, ec=c, alpha=alphaval)
         ax1.set_xlim(xlim)
         ax1.set_ylim(ylim)
-        ax1.annotate('X-Y', xy=(0.5, 0.9), xycoords='axes fraction')
+        ax1.annotate('X-Y', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='black')
         xdata = data['x'][indices]
         ydata = data['z'][indices]
         ax3.scatter(xdata, ydata, s=sdata, marker='o',facecolor=c, ec=c, alpha=alphaval)
         ax3.set_xlim(xlim)
         ax3.set_ylim(zlim)
-        ax3.annotate('X-Z', xy=(0.5, 0.9), xycoords='axes fraction')
+        ax3.annotate('X-Z', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='black')
         xdata = data['z'][indices]
         ydata = data['y'][indices]
         ax2.scatter(xdata, ydata, s=sdata, marker='o',facecolor=c, ec=c, alpha=alphaval)
         ax2.set_xlim(ylim)
         ax2.set_ylim(zlim)
-        ax2.annotate('Y-Z', xy=(0.5, 0.9), xycoords='axes fraction')
+        ax2.annotate('Y-Z', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='black')
+        fig.subplots_adjust(wspace=0, hspace=0)
+        fig.savefig(basefilename + f'.t-{i}.png')
+        fig.clear()
+    print('Produced frames, generating movies')
+    # Create a GIF and movie from the images
+    images = []
+    for i in range(nsteps):
+        images.append(imageio.v3.imread(basefilename + f'.t-{i}.png'))
+    imageio.v3.imwrite(basefilename + '.gif', images)
+    imageio.v3.imwrite(basefilename + '.mp4', images, fps=5)
+    if cleanplots:
+        for i in range(nsteps):
+            os.remove(basefilename + f'.t-{i}.png')
+    print('Done')
+
+def plot_density(nsteps, nparts, data, 
+                 nbins = 25,
+                 cleanplots = True, 
+                 basefilename = 'plots/nbody-density-plot',
+                 ):
+    fig = plt.figure(figsize=(10, 10))
+    print('Generating frames...')
+    xlim = [np.min(data['x']),np.max(data['x'])]
+    ylim = [np.min(data['y']),np.max(data['y'])]
+    zlim = [np.min(data['z']),np.max(data['z'])]
+    for i in range(nsteps):
+        gs = plt.GridSpec(2, 2, figure=fig)
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax3 = fig.add_subplot(gs[1, 0])
+        indices = np.arange(i*nparts,(i+1)*nparts,1)
+        
+        #indices = np.array(np.where(data['timestep']==i+1)[0], dtype=np.int32)
+        xdata = data['x'][indices]
+        ydata = data['y'][indices]
+        ax1.hexbin(xdata, ydata, gridsize=nbins, cmap='viridis')
+        ax1.set_xlim(xlim)
+        ax1.set_ylim(ylim)
+        ax1.annotate('X-Y', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='white')
+        xdata = data['x'][indices]
+        ydata = data['z'][indices]
+        ax3.hexbin(xdata, ydata, gridsize=nbins, cmap='viridis')
+        ax3.set_xlim(xlim)
+        ax3.set_ylim(zlim)
+        ax3.annotate('X-Z', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='white')
+        xdata = data['z'][indices]
+        ydata = data['y'][indices]
+        ax2.hexbin(xdata, ydata, gridsize=nbins, cmap='viridis')
+        ax2.set_xlim(ylim)
+        ax2.set_ylim(zlim)
+        ax2.annotate('Y-Z', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='white')
+        fig.subplots_adjust(wspace=0, hspace=0)
         fig.savefig(basefilename + f'.t-{i}.png')
         fig.clear()
     print('Produced frames, generating movies')
@@ -65,8 +121,9 @@ def plot_scatter(nsteps, nparts, data, basefilename = 'plots/nbody-scatter-plot'
         images.append(imageio.v3.imread(basefilename + f'.t-{i}.png'))
     imageio.v3.imwrite(basefilename + '.gif', images)
     imageio.v3.imwrite(basefilename + '.mp4', images, fps=1)
-    for i in range(nsteps):
-        os.remove(basefilename + f'.t-{i}.png')
+    if cleanplots:
+        for i in range(nsteps):
+            os.remove(basefilename + f'.t-{i}.png')
     print('Done')
 
 def plot_orbits(nparts, data, 
@@ -108,6 +165,7 @@ def plot_orbits(nparts, data,
         ax2.plot(xdata, ydata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5)
         ax2.scatter(xdata[0], ydata[0], linewidth=2, marker='o', facecolor='None', ec=c)
         ax2.scatter(xdata[-1], ydata[-1], linewidth=2, marker='*',facecolor='None', ec=c)
+    fig.subplots_adjust(wspace=0, hspace=0)
     fig.savefig(filename)
 
 def plot_phase(nsteps, nparts, data, 
@@ -185,6 +243,7 @@ def plot_phase(nsteps, nparts, data,
         ax6.plot(xdata, ydata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5, zorder=2)
         ax6.scatter(xdata[0], ydata[0], marker='o', facecolor='None', ec=c)
         ax6.scatter(xdata[-1], ydata[-1], marker='*',facecolor='None', ec=c)
+        fig.subplots_adjust(wspace=0, hspace=0)
     fig.savefig(filename+'.png')
 
     fig = plt.figure(figsize=(10, 10))
@@ -199,17 +258,25 @@ def plot_phase(nsteps, nparts, data,
         veldata = np.array([data['vx'][indices]-cmvel[0],data['vy'][indices]-cmvel[1],data['vz'][indices]-cmvel[2]])
         xdata = np.sqrt(posdata[0]*posdata[0]+posdata[1]*posdata[1]+posdata[2]*posdata[2])
         ydata = (posdata[0]*veldata[0]+posdata[1]*veldata[1]+posdata[2]*veldata[2])/xdata
-        tdata = data['time'][indices]/data['time'][indices[-1]] # Myr
+        ttot = data['time'][indices[-1]]
+        tdata = data['time'][indices]/ttot  # Myr
         ax2.plot(xdata, ydata, linewidth=2, color=c, alpha=0.25, zorder=1)
         ax2.plot(xdata, ydata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5, zorder=2)
         ax2.scatter(xdata[0], ydata[0], marker='o', facecolor='None', ec=c)
         ax2.scatter(xdata[-1], ydata[-1], marker='*',facecolor='None', ec=c)
+        ax2.annotate(r'$R-V_{r}$', xy=(0.5, 0.9), xycoords='axes fraction', fontsize=20, color='black')
+        ax2.yaxis.tick_right()  # Move ticks to the right side
+        ax2.yaxis.set_label_position('right')
 
         ax1.plot(tdata, xdata, linewidth=2, color=c, alpha=0.25, zorder=1)
         ax1.plot(tdata, xdata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5, zorder=2)
+        ax1.set_ylabel('Radial Distance from CM [pc]')
 
         ax3.plot(tdata, ydata, linewidth=2, color=c, alpha=0.25, zorder=1)
         ax3.plot(tdata, ydata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5, zorder=2)
+        ax3.set_ylabel('Radial Velocity from CMVel [km/s]')
+        ax3.set_xlabel(r'Normalized Time [$t_f={:.2f}~$Myr]'.format(ttot/3.154e13))
+        fig.subplots_adjust(wspace=0, hspace=0)
 
     fig.savefig(filename+'-rad.png')
 
@@ -222,6 +289,8 @@ print('Plotting for ', nparts, 'particles over ', nsteps)
 if plottype == 'orbit':
     plot_orbits(nparts, data)
 elif plottype == 'scatter':
-    plot_scatter(nsteps, nparts, data)
+    plot_scatter(nsteps, nparts, data, False)
+elif plottype == 'density':
+    plot_density(nsteps, nparts, data, 25, False)
 elif plottype == 'phase':
     plot_phase(nsteps, nparts, data,)

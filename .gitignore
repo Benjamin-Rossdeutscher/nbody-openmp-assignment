@@ -1,0 +1,5 @@
+plots/*png
+plots/*mp4
+plots/*gif
+obj/*.o
+bin/*

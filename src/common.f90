@@ -12,10 +12,10 @@ module nbody_common
     include "mpif.h"
 #endif
    
-    integer, parameter :: NUMVISUAL = 3
-    integer, parameter :: VisualiseType_VISUAL_ASCII = 0
-    integer, parameter :: VisualiseType_VISUAL_ASCII_MESH = 1
-    integer, parameter :: VisualiseType_VISUAL_PNG = 2
+    integer, parameter :: NUMVISUAL = 4
+    integer, parameter :: VisualiseType_VISUAL_NONE = 0
+    integer, parameter :: VisualiseType_VISUAL_ASCII = 1
+    integer, parameter :: VisualiseType_VISUAL_ASCII_MESH = 2
 
     integer, parameter :: NUMICS = 3
     integer, parameter :: ICType_IC_RAND = 0
@@ -25,6 +25,10 @@ module nbody_common
     integer, parameter :: NUMBOUNDARYCHOICES = 2
     integer, parameter :: BoundaryType_BOUNDARY_NONE = 0
     integer, parameter :: BoundaryType_BOUNDARY_PERIODIC = 1
+
+    integer, parameter :: NUMTIMESTEPSTYPES = 2
+    integer, parameter :: TimeStepCrit_Adaptive = 1
+    integer, parameter :: TimeStepCrit_Static = 0 
     
     type Options 
         ! assuming position in solar masses, velocity in km/s 
@@ -33,6 +37,7 @@ module nbody_common
         integer :: iictype
         integer :: ivisualisetype
         integer :: iboundarytype
+        integer :: itimestepcrit 
         real(8) :: initial_size
         real(8) :: period
         real(8) :: radiusfac
@@ -45,7 +50,7 @@ module nbody_common
         real(8) :: grav_unit
         real(8) :: collision_unit
         integer :: vis_res 
-        character(len=2000) :: statsfile
+        character(len=2000) :: outfile
         character(len=2000) :: asciifile
     end type Options 
 
@@ -366,21 +371,10 @@ module nbody_common
         else 
             open(10, file=opt%asciifile, access="append")
         end if
-        ! write(10,*) "nparts ", opt%nparts, "step ", step
         do i = 1, opt%nparts
-!            write(10,*) step, opt%time, parts(i)%ID, parts(i)%mass, parts(i)%radius, parts(i)%position, parts(i)%velocity, parts(i)%accel
             write(10,*) step, opt%time, parts(i)
         end do 
         close(10)
-    end subroutine 
-
-    ! png visualisation
-    subroutine visualise_png(opt, step, parts)
-        implicit none 
-        integer, intent(in) :: step
-        type(Particle), dimension(:), intent(in) :: parts
-        type(Options), intent(in) :: opt
-
     end subroutine 
 
     ! no visualisation
@@ -400,8 +394,6 @@ module nbody_common
             call visualise_ascii(opt, step, parts)
         else if (opt%ivisualisetype .eq. VisualiseType_VISUAL_ASCII_MESH) then 
             call visualise_ascii_mesh(opt, step, parts)
-        else if (opt%ivisualisetype .eq. VisualiseType_VISUAL_PNG) then 
-            call visualise_png(opt, step, parts)
         else  
             call visualise_none(step)
         end if 
@@ -442,8 +434,6 @@ module nbody_common
         ! Set mass, ID, and PID for all particles
         do i = 1, opt%nparts
             mval=rand()
-            !?? 
-            !mval = 1.0 
             parts(i)%mass = mval * opt%munit
             parts(i)%ID = i
             parts(i)%PID = i
@@ -526,16 +516,11 @@ module nbody_common
         write(*,*) "time step", opt%time_step
         write(*,*) "grav in solar masses kpc^2 km/s^2", opt%grav_unit
         write(*,*) "collisional force unit in grav units", opt%collision_unit
-        write(*,*) "IC type ",opt%iictype
-        write(*,*) "Visualization type ",opt%ivisualisetype
         write(*,*) "Boundary rule type ",opt%iboundarytype
+        write(*,*) "IC type ",opt%iictype
+        write(*,*) "Time-step criterion ",opt%itimestepcrit
+        write(*,*) "Visualization type ",opt%ivisualisetype
         write(*,*) "========================================================= "
-#ifndef USEPNG
-        if (opt%ivisualisetype .eq. VisualiseType_VISUAL_PNG) then 
-            write(*, *) "PNG visualisation not enabled at compile time,"
-            write(*, *) "turning off visualisation from now on."
-        end if
-#endif
     
 #ifdef _MPI
         call MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
@@ -559,7 +544,7 @@ module nbody_common
         type(Options), intent(inout) :: opt
         character(len=2000) :: cmd
         character(len=32) :: arg 
-        character(len=2000) :: statsfilename, asciifilename
+        character(len=2000) :: outfilename, asciifilename
         character(len=32) :: value
         integer :: count
         ! get the commands passed and the number of args passed 
@@ -567,20 +552,21 @@ module nbody_common
         count = command_argument_count()
         if (count .lt. 2) then 
             write(*,*) "Usage: <number of particles> <nsteps> "
-            write(*,*) "[<Boundary type> <IC type> <Visualisation type> <Vis res>"
+            write(*,*) "[<Boundary type> <IC type> <Time Step Criterion> <Visualisation type> <Vis res>]"
             call exit();
         end if 
         
-        statsfilename = "nbody-stats.txt"
-        asciifilename = "nbody-data.txt"
+        outfilename = "nbody-data.txt"
+        asciifilename = "nbody-asciivis.txt"
         call get_command_argument(1,arg)
         read(arg,*) opt%nparts
         call get_command_argument(2,arg)
         read(arg,*) opt%nsteps
         opt%vis_res=100
-        opt%ivisualisetype = VisualiseType_VISUAL_ASCII
+        opt%ivisualisetype = VisualiseType_VISUAL_NONE
         opt%iictype = ICType_IC_RAND
         opt%iboundarytype = BoundaryType_BOUNDARY_NONE
+        opt%itimestepcrit = TimeStepCrit_Adaptive
         opt%initial_size = 1.0 
         opt%period = 0.0
         ! and radius is 1/10th of the initial size of the box 
@@ -588,17 +574,18 @@ module nbody_common
         opt%munit = 1.0
         opt%vunit = 1.0 
         opt%lunit = 1.0 
-        ! conversion from km to kpc 
-        opt%vlunittolunit = 3.24078e-17
-        ! grav in km/s^2 kpc^2 / solar masses
-        opt%grav_unit = 4.30241002e-6 * opt%vlunittolunit
+        ! conversion from km to pc 
+        opt%vlunittolunit = 3.24078e-14
+        ! grav in km/s^2 pc^2 / solar masses
+        opt%grav_unit = 4.30241002e-3 * opt%vlunittolunit
         ! make time unit related to graviational unit in seconds
         opt%tunit = 1.0/sqrt((opt%grav_unit *opt%vlunittolunit * opt%munit/opt%initial_size**3.0)) 
         ! time step should be some fraction of the dynamical time of a close encounter the system which is related 
         ! to tunit by radiusfac **1.5
         opt%time = 0
-        opt%time_step_fac = 0.25
-        opt%time_step = opt%tunit * opt%radiusfac**1.5 * opt%time_step_fac
+        opt%time_step_fac = 0.1
+        ! opt%time_step = opt%tunit * opt%radiusfac**1.5 * opt%time_step_fac
+        opt%time_step = opt%tunit * opt%time_step_fac
         ! make collisional (repulsive) force 10 times stronger than gravity 
         ! and is in units of gravitational forces 
         opt%collision_unit = 2.0
@@ -615,10 +602,14 @@ module nbody_common
         end if 
         if (count .ge. 5) then 
             call get_command_argument(5, arg)
-            read(arg,*) opt%ivisualisetype
+            read(arg,*) opt%itimestepcrit
         end if 
         if (count .ge. 6) then 
             call get_command_argument(6, arg)
+            read(arg,*) opt%ivisualisetype
+        end if 
+        if (count .ge. 7) then 
+            call get_command_argument(7, arg)
             read(arg,*) opt%vis_res
         end if 
         if (opt%nparts .le. 0) then 
@@ -633,7 +624,7 @@ module nbody_common
             write(*,*) "Invalid number of steps."
             call exit(1)
        end if 
-       opt%statsfile = statsfilename
+       opt%outfile = outfilename
        opt%asciifile = asciifilename 
        call run_state(opt)
     end subroutine 

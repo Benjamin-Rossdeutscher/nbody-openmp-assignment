@@ -28,8 +28,8 @@ program GameOfLife
                 type(Options), intent(in) :: opt
                 type(Particle), dimension(:), intent(inout) :: parts
         end subroutine
-        ! Nbody stats protoype
-        subroutine nbody_stats(opt, step, parts)
+        ! Nbody output protoype
+        subroutine nbody_output(opt, step, parts)
                 use nbody_common 
                 implicit none 
                 type(Options), intent(in) :: opt
@@ -50,7 +50,7 @@ program GameOfLife
         do while (current_step .ne. opt%nsteps)
                 time2 = init_time()
                 call visualise(opt, current_step, parts)
-                call nbody_stats(opt, current_step, parts)
+                call nbody_output(opt, current_step, parts)
                 call accel_update(opt, parts)
                 call velocity_update(opt, parts)
                 call position_update(opt, parts)
@@ -59,7 +59,7 @@ program GameOfLife
                 call get_elapsed_time(time2)
                 time2 = init_time()
         end do 
-        write(*,*) "Finnished NBody simulation"
+        write(*,*) "Finished NBody simulation"
         call get_elapsed_time(time1);
         deallocate(parts)
 end program
@@ -114,10 +114,17 @@ subroutine accel_update(opt, parts)
                         end if 
                 end do 
         end do 
-        ! get average mass between particle pairs with min distance
-        massave = 0.5*(parts(iminrad)%mass + parts(jminrad)%mass)
-        newstep = opt%time_step_fac*sqrt(2.0*minrad**3.0/(opt%grav_unit * opt%vlunittolunit * massave))
-        opt%time_step = newstep 
+        ! if updating step base it on the acceleration between the closest pair of particles 
+        if (opt%itimestepcrit .eq. TimeStepCrit_Adaptive) then
+                ! get average mass between particle pairs with min distance
+                massave = 0.5*(parts(iminrad)%mass + parts(jminrad)%mass)
+                newstep = opt%time_step_fac*sqrt(2.0*minrad**3.0/(opt%grav_unit * opt%vlunittolunit * massave))
+                if (newstep .lt. opt%tunit) then 
+                        opt%time_step = newstep
+                else 
+                        opt%time_step = opt%tunit
+                end if 
+        end if 
 end subroutine
 
 ! update velocities 
@@ -155,17 +162,23 @@ subroutine position_update(opt, parts)
         !print *, opt%nparts, rmin, rmax, rmin/opt%nparts**(1.0/3.0), rmax/opt%nparts**(1.0/3.0)
         !print *, rad_average/opt%nparts, rad_average/opt%nparts/opt%nparts**(1.0/3.0)
 end subroutine
-! stats protoype
-subroutine nbody_stats(opt, step, parts)
+
+! write out the nbody information 
+subroutine nbody_output(opt, step, parts)
         use nbody_common 
         implicit none 
         type(Options), intent(in) :: opt
         integer, intent(in) :: step
         type(Particle), dimension(:), intent(in) :: parts
-        integer :: i, k
+        integer :: i
 
+        if (step .eq. 0) then 
+                open(10, file=opt%outfile, access="sequential")
+        else 
+                open(10, file=opt%outfile, access="append")
+        end if
         do i = 1, opt%nparts
-                do k = 1,3
-                end do 
+                write(10,*) step, opt%time, parts(i)
         end do 
+        close(10)
 end subroutine 
