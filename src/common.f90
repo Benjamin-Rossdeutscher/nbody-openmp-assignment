@@ -112,14 +112,20 @@ module nbody_common
     end subroutine
 
     ! get some basic timing info
-    real(8) function init_time()
+    function init_time() result(start_time)
+        use iso_fortran_env, only: int64
+        implicit none
         integer, dimension(8) :: value
+        real(8) :: start_time
+        
         call date_and_time(VALUES=value)
-        init_time = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
+        start_time = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
         return 
-    end function
+    end function init_time
     ! get the elapsed time relative to start
     subroutine get_elapsed_time(start)
+        use, intrinsic :: iso_fortran_env
+        implicit none
         real(8), intent(in) :: start
         real(8) :: finish, delta
         integer, dimension(8) :: value
@@ -514,7 +520,7 @@ module nbody_common
         write(*,*) "vunit in km/s", opt%vunit
         write(*,*) "tunit in s", opt%tunit
         write(*,*) "time step", opt%time_step
-        write(*,*) "grav in solar masses kpc^2 km/s^2", opt%grav_unit
+        write(*,*) "grav in solar masses pc km^2/s^2", opt%grav_unit
         write(*,*) "collisional force unit in grav units", opt%collision_unit
         write(*,*) "Boundary rule type ",opt%iboundarytype
         write(*,*) "IC type ",opt%iictype
