@@ -1,10 +1,3 @@
-The assignment is to use a simple \textbf{N-Body} gravitational code. 
-
-Here we provide:
-\begin{enumerate}
-	\item[\S\ref{sec:nbody}:] An overview of the N-Body code. If familiar with N-Body codes, please continue to \S\ref{sec:code}.
-	\item[\S\ref{sec:code}:] An overview of the code repository. 
-\end{enumerate}
 
 \section{N-Body}
 \label{sec:nbody}
@@ -50,10 +43,25 @@ The time-integration technique is critical to conserving the total energy of the
 Here we follow the radial position and velocity of two particles, one more massive (blue) than the other (red). The system is initialized such that the particles are in orbit around the common centre-of-mass. For the fixed time step, the simulation does not correctly follow the close encounter, moving the particle too much during this phase, resulting the lighter particle's having too much momentum after the encounter and streaming off unbound from the system as see in the left panel. 
 
 \par 
-An adaptive time step which is always set to some small fraction of the dynamical time of the system will correctly model the encounter. However, it is worth noting here that there are still issues with the energy of the system, something that will be discussed in the assignment. 
+An adaptive time step which is always set to some small fraction of the dynamical time of the system will correctly model the encounter. However, it is worth noting here that there are still issues with the energy of the system (see assignment questions). 
 
-%\subsection{Lagrangian discretisation \& simulations}
-%\label{sec:nbody:particlesims}
+\subsection{Long-range forces}
+\label{sec:nbody:longrange}
+There are several challenges to modelling long-range forces. Long-range forces like the gravitational force are computationally expensive as the calculations scale as $\mathcal{O}(N^2)$, that is one must calculate the force between each pair of particles. Computational techniques can be used to reduce the scaling but require some approximations to be made (see assignment questions).
+
+\par 
+Correctly solving the force for periodic systems requires additional corrections as it is not computationally feasible to simple add more pairs where one has been shifted by the period. Such an approach would require terminating the number of additional particles out to some multiples of the period, introducing additional approximations. Instead, a typical approach is to break the force calculation into a shorter range and long (period) range set, often referred to as Ewald summation (\href{see https://en.wikipedia.org/wiki/Ewald_summation}). 
+
+\par 
+Finally, there is added complexity to correctly calculating the true evolution of the system given the finite-speed of the force carrier. To accurately calculate long-distance forces a full general relativistic approach is required \cite{grnbody}. However, the difference between the accurate solution and an approximateive one where the force is transitted instantaneously can be small for forces that depend on radial distance of the form $r^{n}$, $n\leq-2$ since the long-range forces are small\cite{grcorrections}.
+
+\subsection{Short-range forces}
+\label{sec:nbody:shortrange}
+Short range forces also face several challenges. The first is that the naive implementation would require 
+$\mathcal{O}(N^2)$ radius calculation to see if a pair is within the short-range force before calculating said force. Computational techniques can be used to significantly reduce the computational cost of the local neighbour search, without requiring any approximations (see assignemnt questions).
+
+\par 
+These forces can also be subject to the speed of the force carrier and may also require corrections to accurately calculate the force. 
 
 \section{Code Repository}\label{sec:code}
 The code that forms the basis of the assignment contains the following 

@@ -24,6 +24,15 @@
 \begin{document}
 \maketitle
 \pagestyle{plain}
+The assignment is to use a simple \textbf{N-Body} gravitational code. 
+
+Here we provide:
+\begin{enumerate}
+	\item[\S\ref{sec:nbody}:] An overview of the N-Body code. If familiar with N-Body codes, please continue to \S\ref{sec:code}.
+	\item[\S\ref{sec:code}:] An overview of the code repository. 
+  \item[\S\ref{sec:tasks}:] The assessable tasks.  
+\end{enumerate}
+
 \input{hpc-nbody-info}
 
 \newpage
@@ -59,9 +68,7 @@ gprof -lbp ./bin/02_cpu_openmp_loop gmon.out > analysis.txt
 \end{minted}
 \end{minipage}
 \end{center}
-Look at the output produced by the code as well as the output of the profiling.
-????
-The code provides summary statistics per step that depend only on the grid size and the step, saved as {\color{blue}\texttt{GOL-stats.txt}}. The code also writes to standard out, so when running save the output to meaningful log files. Similarly save the stats file to a meaning filename
+Look at the output produced by the code as well as the output of the profiling. The code provides the state of every particle at every step, saved as {\color{blue}\texttt{nbody-data.txt}}. The code also writes to standard out, so when running save the output to meaningful log files. Similarly save the output file to a meaning filename.
 \begin{center}
 \begin{minipage}{0.95\textwidth}
 \begin{minted}[frame=single,]{sh}
@@ -82,10 +89,10 @@ mv nbody-data.txt ${basename}.data.txt
 In this way, you can compare results as you update the code, change the number of threads, change versions, etc and keep track of changes in performance and compare results.
 
 \subsection{{\color{Red} Preliminaries}: Serial optimisation\nopunct\\}\label{sec:tasks:serialopt}
-The code do not have optimal do loops. Please look at the code and update these loops to improve the performance and show that this is the case. 
+The code is not optimised serially. Please look at the code, particularly the main subroutines to improve the performance and show that this is the case. 
 
 \subsection{{\color{Red} Principle Task}: Implement OpenMP Parallelism\nopunct\\}\label{sec:tasks:omp}
-Perform an OpenMP parallelisation of the serial code, test performance and scaling. There are two main approaches, {\color{Orange}\textbf{Loop}} and {\color{Orange}\textbf{Task}} parallelism. This source code should be called \texttt{02\_cpu\_openmp\_loop.f90} or for task parallelism  \texttt{02\_cpu\_openmp\_task.f90}.
+Perform an OpenMP parallelisation of the serial code, test performance and scaling. There are two main approaches, {\color{Orange}\textbf{Loop}} and {\color{Orange}\textbf{Task}} parallelism. This source code should be called \texttt{02\_cpu\_openmp\_loop.f90} or for task parallelism  \texttt{02\_cpu\_openmp\_task.f90}. One can 
 
 The code should contain extensive \textbf{\textit{comments}}, noting what you are doing \textit{and why}. I will compile your code using the appropriate \texttt{make} command.
 {\centering \textit{You must show that the code produces correct results regardless of the number of OpenMP threads used. This can be checked with the output file.}}
@@ -97,15 +104,20 @@ Test how the code scales with number of threads and also problem size and discus
 Compare your results and explain the scaling seen both with problem size and number of threads. Please keep in mind that when running the scaling tests, submit sbatch jobs requesting access on the work queue of Setonix for a short amount of time.
 
 \subsection{{\color{Red}Third Task}: Discussion Questions\nopunct\\}\label{sec:tasks:discussion}
-??? ask algorithm improvements 
+Answer the following 3 questions in the assignment.
+\begin{enumerate} 
+  \item Discuss how the algorithm for calculating the gravitational force can be improved in regards to how the computational cost. How would that impact the code and the resulting simulation?
+  \item Discuss how the algorithm for calculating the short range collisional force can be improved in regards to how the computational cost. How would that impact the code and the resulting simulation?
+  \item Discuss how the time-integration could be improved to improve the accuracy of the simulation without drastically decreasing the time-step and increasing the number of steps taken. How would that impact the code and the resulting simulation? 
+\end{enumerate}
 
 \section{{\color{Blue}What you need to hand in\nopunct\\}}\label{sec:handin}
 
 You must submit a zip (or tar) file containing:
 \begin{itemize}
-\item Your code within the repository so that it can be easily compiled. Make it clear which type of OpenMP parallelisation you have implemented.
-\item A pdf of your code so that I can read it and the comments associated with the changes you have made. Remember to be verbose!
-\item A pdf report discussing the OpenMP parallelisation of the code and answer the explicit questions discussed above. Details of what should be in the report are outlined below.
+  \item Your code within the repository so that it can be easily compiled. Make it clear which type of OpenMP parallelisation you have implemented.
+  \item A pdf of your code so that I can read it and the comments associated with the changes you have made. Remember to be verbose!
+  \item A pdf report discussing the OpenMP parallelisation of the code and answer the discussion questions above. Details of what should be in the report are outlined below.
 \end{itemize}
 
 \subsection*{Report\nopunct\\}\label{sec:handin:report}
@@ -114,20 +126,20 @@ You must submit a zip (or tar) file containing:
   \item{\textbf{Intro} : Describe compilers used, any additional compilation flags used such as optimisation. Describe choice of parallelism used (if applicable).} 
   \item{\textbf{Profiling} : Profile the code and discuss the results.}
   \item{\textbf{Correctness} : Show code compiles and still produces correct results compared to serial version. Ensure that all functionality of the code remains intact. If you wish, you can add functionality.}
-  \item{\textbf{Implementation} : Describe and discuss implementation, all choices and any testing that has driven a choice.}
+  \item{\textbf{Implementation} : Describe and discuss serial optimisation, openmp implementation, all choices and any testing that has driven a choice.}
   \item{\textbf{Scalability} : Test how the code performs, show scaling of code and discuss results.}
   \item{\textbf{Code} : Highlight changes to code.}
-  \item{\textbf{Discussion Questions} }
+  \item{\textbf{Discussion Questions} : Answer the 3 questions posed above}
 \end{enumerate}
 
 \subsection*{Marks\nopunct\\}\label{sec:handin:marks}
-\noindent The assignment is marked out of \textbf{40}. The marks are awarded as follows:
+\noindent The assignment is marked out of \textbf{36}. The marks are awarded as follows:
 \begin{itemize}
-  \item{\textbf{Correctness} : The code must compile and produce the correct result. \textbf{Otherwise a factor of 1/2 will be applied to the total mark.}}
+  \item{\textbf{Correctness} : The code must compile and produce the correct result. \textbf{Otherwise a factor of 1/2 will be applied to the code related sections, which total 30 marks.}}
   \item{\textbf{Profiling} : Out of 2}
   \item{\textbf{Implementation} and \textbf{Code}: Out of 20}
   \item{\textbf{Scalability}: Out of 8}
-  \item{\textbf{Discussion Questions}: Out of 5}
+  \item{\textbf{Discussion Questions}: Out of 6}
 \end{itemize}
 
 \noindent{\color{CornflowerBlue}BONUS}: \textit{If Both Task and Loop are implemented, bonus marks will be awarded.}
@@ -135,11 +147,14 @@ You must submit a zip (or tar) file containing:
   %\item {\color{CornflowerBlue}BONUS}: Discuss how does thread affinity affects performance.
   %\item {\color{CornflowerBlue}BONUS}: Show that the code is also vectorised and how this affects performance.
 
-???
 \bibliographystyle{plain}
 \begin{thebibliography}{2}
 
 \bibitem{enzo} Bryan, G.~L., Norman, M.~L., O'Shea, B.~W., et al.\ 2014, \textit{Astrophysical Journal Supplementary Series}, 211, 19. doi:10.1088/0067-0049/211/2/19
+
+\bibitem[Adamek et al.(2013)]{grnbody} Adamek, J., Daverio, D., Durrer, R., et al.\ 2013, \textit{Physical Review Letters}, 88, 103527. doi:10.1103/PhysRevD.88.103527
+
+\bibitem[East et al.(2018)]{grcorrections} East, W.~E., Wojtak, R., \& Abel, T.\ 2018, \textit{Physical Review Letters}, 97, 043509. doi:10.1103/PhysRevD.97.043509
 
 \end{thebibliography}
 
