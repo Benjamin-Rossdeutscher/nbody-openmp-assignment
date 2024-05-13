@@ -3,8 +3,9 @@ plots/*mp4
 plots/*gif
 obj/*.o
 bin/*
-docs/assignment/_minted-hpc-openmp-assignment/*.aux
-docs/assignment/_minted-hpc-openmp-assignment/*.log
-docs/assignment/_minted-hpc-openmp-assignment/*.out
-docs/assignment/_minted-hpc-openmp-assignment/*.pdf
+docs/assignment/_minted-hpc-openmp-assignment/*
+docs/assignment/*.aux
+docs/assignment/*.log
+docs/assignment/*.out
+docs/assignment/*.pdf
 
