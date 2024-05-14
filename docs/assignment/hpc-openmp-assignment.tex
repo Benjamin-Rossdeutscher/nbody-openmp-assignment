@@ -45,12 +45,12 @@ Here we provide:
 \subsection*{How to start?\nopunct\\} \label{sec:tasks:staring}
 For each task, start by profiling the code using \texttt{gprof}. This will allow you to identify where most of the time is spent. Try using large grid sizes (within reason). With this profiling information, you should be able to identify what should be parallelised. Look at the code itself and make sure you understand the algorithm.
 
-Copy the original serial source file to \texttt{02\_cpu\_openmp\_loop} and/or \texttt{02\_cpu\_openmp\_task} and try compiling the code
+Copy the original serial source file to \texttt{02\_nbody\_cpu\_openmp\_loop} and/or \texttt{02\_nbody\_cpu\_openmp\_task} and try compiling the code
 \begin{center}
 \begin{minipage}{0.95\textwidth}
 \begin{minted}[frame=single,]{sh}
-cp src/01_cpu_serial.f90 src/02_cpu_openmp_loop.f90
-cp src/01_cpu_serial.f90 src/02_cpu_openmp_task.f90
+cp src/01_nbody_cpu_serial.f90 src/02_nbody_cpu_openmp_loop.f90
+cp src/01_nbody_cpu_serial.f90 src/02_nbody_cpu_openmp_task.f90
 \end{minted}
 \end{minipage}
 \end{center}
@@ -62,9 +62,9 @@ Here the example is for building on setonix.
 # compile
 make COMPILERTYPE=CRAY-GNU PROFILER=ON cpu_openmp_loop
 # run two steps of a moderately large number of particles 
-./bin/02_cpu_openmp_loop 100000 2
+./bin/02_nbody_cpu_openmp_loop 100000 2
 # profile
-gprof -lbp ./bin/02_cpu_openmp_loop gmon.out > analysis.txt
+gprof -lbp ./bin/02_nbody_cpu_openmp_loop gmon.out > analysis.txt
 \end{minted}
 \end{minipage}
 \end{center}
@@ -81,7 +81,7 @@ someversionname=reference
 # set a base name
 basename=nbody-${someversionname}.nomp-${nomp}.np-${np}.nsteps-${nsteps}
 export OMP_NUM_THREADS=${nomp}
-./bin/02_cpu_openmp_loop ${np} ${nsteps} > ${basename}.log
+./bin/02_nbody_cpu_openmp_loop ${np} ${nsteps} > ${basename}.log
 mv nbody-data.txt ${basename}.data.txt
 \end{minted}
 \end{minipage}
