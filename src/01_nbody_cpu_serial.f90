@@ -13,7 +13,7 @@ program GameOfLife
         subroutine accel_update(opt, parts)
                 use nbody_common 
                 implicit none
-                type(Options), intent(in) :: opt
+                type(Options), intent(inout) :: opt
                 type(Particle), dimension(:), intent(inout) :: parts
         end subroutine
         subroutine velocity_update(opt, parts)
