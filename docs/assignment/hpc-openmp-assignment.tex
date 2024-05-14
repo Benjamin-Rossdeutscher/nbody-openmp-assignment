@@ -62,9 +62,9 @@ Here the example is for building on setonix.
 # compile
 make COMPILERTYPE=CRAY-GNU PROFILER=ON cpu_openmp_loop
 # run two steps of a moderately large number of particles 
-./bin/02_cpu_openmp_loop 100000 2
+./bin/02_nbody_cpu_openmp_loop 100000 2
 # profile
-gprof -lbp ./bin/02_cpu_openmp_loop gmon.out > analysis.txt
+gprof -lbp ./bin/02_nbody_cpu_openmp_loop gmon.out > analysis.txt
 \end{minted}
 \end{minipage}
 \end{center}
@@ -81,7 +81,7 @@ someversionname=reference
 # set a base name
 basename=nbody-${someversionname}.nomp-${nomp}.np-${np}.nsteps-${nsteps}
 export OMP_NUM_THREADS=${nomp}
-./bin/02_cpu_openmp_loop ${np} ${nsteps} > ${basename}.log
+./bin/02_nbody_cpu_openmp_loop ${np} ${nsteps} > ${basename}.log
 mv nbody-data.txt ${basename}.data.txt
 \end{minted}
 \end{minipage}
