@@ -1,4 +1,4 @@
-program GameOfLife
+program NBody
 !---------------------------------------------------------------------
 !
 !  This program runs a Collisional N-body simulation
