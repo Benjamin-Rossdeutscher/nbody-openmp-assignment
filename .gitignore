@@ -8,4 +8,8 @@ docs/assignment/*.aux
 docs/assignment/*.log
 docs/assignment/*.out
 docs/assignment/*.pdf
-
+.DS_Store
+docs/.DS_Store
+nbody_common.mod
+src/nbody_common.mod
+nbody-data.txt

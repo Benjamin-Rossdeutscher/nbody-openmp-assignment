@@ -495,8 +495,17 @@ module nbody_common
         !call write_data(parts)
     end subroutine 
 
+    ! Usage
+    subroutine usage()
+        write(*,*) "Usage: <number of particles> <nsteps> "
+        write(*,*) "[<Boundary type> <IC type> <Time Step Criterion> <Visualisation type> <Vis res>]"
+        write(*,*) "Boundary type: 0 non-periodic (default), 1 periodic"
+        write(*,*) "IC type: 0 random (default), 1 orbiting (useful for few-body systems)"
+        write(*,*) "Time Step Criterion: 0 static, 1 adaptive (default)"
+        write(*,*) "Visualisation type: 0 none (default), 1 projected density mesh as ascii"
+        write(*,*) "Vis res: valid for vis type 1, mesh resolution"
+    end subroutine 
 
-    ! Report run state 
     subroutine run_state(opt)
         implicit none 
         type(Options), intent(inout) :: opt
@@ -508,6 +517,7 @@ module nbody_common
 
         nbytes = sizeof(p) * opt%nparts
         memfootprint = real(nbytes)/1024.0/1024.0/1024.0
+        call usage()
         write(*,*) "========================================================= "
         write(*,*) " NBody Running with following "
         write(*,*) "========================================================= "
@@ -516,7 +526,7 @@ module nbody_common
         write(*,*) "Number of steps ", opt%nsteps
         write(*,*) "Physical parameters : "
         write(*,*) "munit in solar masses", opt%munit
-        write(*,*) "lunit in kpc", opt%lunit
+        write(*,*) "lunit in pc", opt%lunit
         write(*,*) "vunit in km/s", opt%vunit
         write(*,*) "tunit in s", opt%tunit
         write(*,*) "time step", opt%time_step
@@ -557,8 +567,7 @@ module nbody_common
         call get_command(cmd)
         count = command_argument_count()
         if (count .lt. 2) then 
-            write(*,*) "Usage: <number of particles> <nsteps> "
-            write(*,*) "[<Boundary type> <IC type> <Time Step Criterion> <Visualisation type> <Vis res>]"
+            call usage()
             call exit();
         end if 
         
