@@ -88,11 +88,7 @@ subroutine accel_update(opt, parts)
                                 call period_wrap_delta(opt, delta)
                                 rad2 = delta(1)**2.0 + delta(2)**2.0 + delta(3)**2.0
                                 rad = sqrt(rad2)
-                                if (minrad .gt. rad) then
-                                        minrad = rad 
-                                        iminrad = i 
-                                        jminrad = j 
-                                end if
+                                minrad = min(minrad,rad)
                                 ! there is some force smoothing inside radius
                                 invrad = 1.0/(rad2 + 0.05*parts(i)%radius**2.0)
                                 parts(i)%accel = parts(i)%accel + invrad * delta / rad *  parts(j)%mass * opt%grav_unit
@@ -117,8 +113,8 @@ subroutine accel_update(opt, parts)
         ! if updating step base it on the acceleration between the closest pair of particles 
         if (opt%itimestepcrit .eq. TimeStepCrit_Adaptive) then
                 ! get average mass between particle pairs with min distance
-                massave = 0.5*(parts(iminrad)%mass + parts(jminrad)%mass)
-                newstep = opt%time_step_fac*sqrt(2.0*minrad**3.0/(opt%grav_unit * opt%vlunittolunit * massave))
+                ! massave = 0.5*(parts(iminrad)%mass + parts(jminrad)%mass)
+                newstep = opt%time_step_fac*sqrt(2.0*minrad**3.0/(opt%grav_unit * opt%vlunittolunit * opt%massave))
                 if (newstep .lt. opt%tunit) then 
                         opt%time_step = newstep
                 else 

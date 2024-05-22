@@ -42,7 +42,7 @@ module nbody_common
         real(8) :: period
         real(8) :: radiusfac
         real(8) :: time, time_step, time_step_fac 
-        real(8) :: munit 
+        real(8) :: munit, massave
         real(8) :: vunit 
         real(8) :: tunit
         real(8) :: lunit
@@ -412,7 +412,7 @@ module nbody_common
         use :: omp_lib
         implicit none
         type(Particle), dimension(:), allocatable :: parts
-        type(Options), intent(in) :: opt 
+        type(Options), intent(inout) :: opt 
         integer :: i, j
         real(8), dimension(3) :: x
         real(8) :: mval, time1
@@ -438,13 +438,16 @@ module nbody_common
         end do
 
         ! Set mass, ID, and PID for all particles
+        opt%massave = 0
         do i = 1, opt%nparts
             mval=rand()
             parts(i)%mass = mval * opt%munit
             parts(i)%ID = i
             parts(i)%PID = i
             parts(i)%radius = opt%initial_size * opt%radiusfac*mval 
+            opt%massave = opt%massave + parts(i)%mass
         end do
+        opt%massave = opt%massave / opt%nparts
         print *, "Done generating positions in "
         call get_elapsed_time(time1)
     end function generate_rand_IC
@@ -458,7 +461,7 @@ module nbody_common
         use :: omp_lib
         implicit none
         type(Particle), dimension(:), allocatable :: parts
-        type(Options), intent(in) :: opt 
+        type(Options), intent(inout) :: opt 
         integer :: i 
         real(8), dimension(3) :: cmx, x
         real(8) :: mtot, time1
@@ -483,7 +486,7 @@ module nbody_common
     ! generate IC
     subroutine generate_IC(opt, parts)
         implicit none 
-        type(Options), intent(in) :: opt
+        type(Options), intent(inout) :: opt
         type(Particle), dimension(:), intent(out), allocatable :: parts
         if (opt%iictype .eq. ICType_IC_RAND) then 
             parts = generate_rand_IC(opt)
