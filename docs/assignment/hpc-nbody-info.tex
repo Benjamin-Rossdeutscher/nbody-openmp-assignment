@@ -195,6 +195,68 @@ Usage: <number of particles> <nsteps>
 \end{minipage}
 \end{center}
 
+\subsection{Scripts}
+There are python scripts contained within the repo that can be used to plot the orbits of particles, make movies of the evolution of scatter plots or density fields and even compare two different output files to see what the error is between runs. The plots will be produced in the \texttt{plots/} directory.
+
+\par 
+The script that looks at evolution is \texttt{scripts/plot\_nbody.py} and can be used to generate a variety of figures:
+\begin{center}
+\begin{minipage}{0.95\textwidth}
+\small
+\begin{minted}[frame=single,]{sh}
+    python scripts/plot_nbody.py ${input_file} ${plot_type} 
+    # where plot type can be 
+    # scatter : makes a movie of the time evolution
+    # density : makes a projected density field movie
+    # phase : makes some phase-space plots about the centre-of-mass. 
+    #         For systems with large of particles will take a random subsample.
+    # orbit : just shows the motion of particles in project 
+    #         For systems with large of particles will take a random subsample.
+\end{minted}
+\end{minipage}
+\end{center}
+    
+\par 
+The script that will produce plots of the difference in position of every particle between two identical IC runs (useful for comparing results) is \texttt{scripts/plot\_comp.py}. This routine can be useful since some changes will result in just numerical noise. 
+\begin{center}
+\begin{minipage}{0.95\textwidth}
+\small
+\begin{minted}[frame=single,]{sh}
+    python scripts/plot_comp.py ${input_file1} ${input_file1}  
+\end{minted}
+\end{minipage}
+\end{center}
+
+An example of using these routines would be the following script:
+\begin{center}
+\begin{minipage}{0.95\textwidth}
+\small
+\begin{minted}[frame=single,]{sh}
+    #!/bin/bash
+    # set parameters for run 
+    np=1000
+    ns=100
+    periodic=0 # not periodic
+    ictype=0 #random ICs, no velocities
+    runinfo=np-${np}.ns-${ns}.periodic-${periodic}.ictype-${ictype}
+    # define the executable you run 
+    exe1=
+    exe2=
+    out1=nbody-data.${exe1}.${runinfo}.txt 
+    out2=nbody-data.${exe2}.${runinfo}.txt 
+    ./bin/${exe1} ${np} ${ns} ${periodic} ${ictype} > run_${exe1}.out
+    mv nbody-data.txt ${out1}
+    ./bin/${exe2} ${np} ${ns} ${periodic} ${ictype} > run_${exe2}.out
+    mv nbody-data.txt ${out2}
+    python scripts/plot_nbody.py ${out1} phase 
+    python scripts/plot_comp.py ${out1} ${out2}
+\end{minted}
+\end{minipage}
+\end{center}
+
+\par 
+It is strongly recommended you make use of these scripts in your analysis.
+
 \subsection{Compiling on Pawsey systems}
 The serial fortran codes will compile with all compilers on \texttt{setonix} so long as the appropriate compiler for the given programming environment is chosen. The make commands to use are 
 \begin{itemize}
