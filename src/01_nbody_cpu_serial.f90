@@ -95,7 +95,7 @@ subroutine accel_update(opt, parts)
                                 end if
                                 ! there is some force smoothing inside radius
                                 invrad = 1.0/(rad2 + 0.05*parts(i)%radius**2.0)
-                                parts(i)%accel = invrad * delta / rad *  parts(j)%mass * opt%grav_unit
+                                parts(i)%accel = parts(i)%accel + invrad * delta / rad *  parts(j)%mass * opt%grav_unit
                         end if 
                 end do 
         end do 
@@ -109,7 +109,7 @@ subroutine accel_update(opt, parts)
                                 rad = sqrt(rad2)
                                 if (rad .lt. parts(i)%radius) then 
                                         invrad = 1.0/(parts(i)%radius)**2.0
-                                        parts(i)%accel = invrad * delta / rad * parts(j)%mass * opt%grav_unit * opt%collision_unit
+                                        parts(i)%accel = parts(i)%accel + invrad * delta / rad * parts(j)%mass * opt%grav_unit * opt%collision_unit
                                 end if 
                         end if 
                 end do 

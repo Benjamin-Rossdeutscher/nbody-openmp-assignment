@@ -443,7 +443,6 @@ module nbody_common
             parts(i)%mass = mval * opt%munit
             parts(i)%ID = i
             parts(i)%PID = i
-            mval=rand()
             parts(i)%radius = opt%initial_size * opt%radiusfac*mval 
         end do
         print *, "Done generating positions in "

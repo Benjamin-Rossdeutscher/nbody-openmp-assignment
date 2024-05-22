@@ -260,6 +260,7 @@ def plot_phase(nsteps, nparts, data,
         ydata = (posdata[0]*veldata[0]+posdata[1]*veldata[1]+posdata[2]*veldata[2])/xdata
         ttot = data['time'][indices[-1]]
         tdata = data['time'][indices]/ttot  # Myr
+        print(ttot,indices.shape)
         ax2.plot(xdata, ydata, linewidth=2, color=c, alpha=0.25, zorder=1)
         ax2.plot(xdata, ydata, linewidth=0, color=c, marker='o', markersize=2, alpha=0.5, zorder=2)
         ax2.scatter(xdata[0], ydata[0], marker='o', facecolor='None', ec=c)
@@ -285,7 +286,7 @@ plottype = 'phase'
 if (len(sys.argv)>=3): 
     plottype=sys.argv[2]
 nparts, nsteps, data = read_ascii_file(filename)
-print('Plotting for ', nparts, 'particles over ', nsteps)
+print('Plotting for ', nparts, 'particles over ', nsteps, 'producing',plottype)
 if plottype == 'orbit':
     plot_orbits(nparts, data)
 elif plottype == 'scatter':
