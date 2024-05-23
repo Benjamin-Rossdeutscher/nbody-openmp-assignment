@@ -118,8 +118,9 @@ module nbody_common
         integer, dimension(8) :: value
         real(8) :: start_time
         
-        call date_and_time(VALUES=value)
-        start_time = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
+        !call date_and_time(VALUES=value)
+        !start_time = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
+        start_time = omp_get_wtime()
         return 
     end function init_time
     ! get the elapsed time relative to start
@@ -129,8 +130,9 @@ module nbody_common
         real(8), intent(in) :: start
         real(8) :: finish, delta
         integer, dimension(8) :: value
-        call date_and_time(VALUES=value)
-        finish = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
+        !call date_and_time(VALUES=value)
+        !finish = value(5)*3600.0+value(6)*60.0+value(7)+value(8)/1000.0
+        finish = omp_get_wtime()
         delta = finish - start
         write(*,*) "Elapsed time is ", delta, "s"
     end subroutine
@@ -605,7 +607,7 @@ module nbody_common
         opt%time_step = opt%tunit * opt%time_step_fac
         ! make collisional (repulsive) force 10 times stronger than gravity 
         ! and is in units of gravitational forces 
-        opt%collision_unit = 2.0
+        opt%collision_unit = 4.0
         if (count .ge. 3) then
             call get_command_argument(3,arg)
             read(arg,*) opt%iboundarytype
