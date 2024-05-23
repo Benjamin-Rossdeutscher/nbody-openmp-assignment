@@ -109,7 +109,8 @@ subroutine accel_update(opt, parts)
                                 rad = sqrt(rad2)
                                 if (rad .lt. parts(i)%radius) then 
                                         invrad = 1.0/(parts(i)%radius)**2.0
-                                        parts(i)%accel = parts(i)%accel + invrad * delta / rad * parts(j)%mass * opt%grav_unit * opt%collision_unit
+                                        parts(i)%accel = parts(i)%accel + invrad * delta &
+                                        / rad * parts(j)%mass * opt%grav_unit * opt%collision_unit
                                 end if 
                         end if 
                 end do 
