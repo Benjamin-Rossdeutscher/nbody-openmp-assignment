@@ -56,6 +56,7 @@ program NBody
                 call position_update(opt, parts)
                 opt%time = opt%time + opt%time_step
                 current_step = current_step + 1
+                print *, "Finished step ", current_step, " moving ", opt%time_step, " in time to ", opt%time   
                 call get_elapsed_time(time2)
                 time2 = init_time()
         end do 
@@ -73,6 +74,9 @@ subroutine accel_update(opt, parts)
         real(8) :: rad, rad2, invrad, accel, maxaccel, minrad, massave, newstep
         real(8), dimension(3) :: delta
         integer :: i, j, k, imaxaccel, iminrad, jminrad
+        real(8) :: time1
+
+        time1 = init_time()
 
         do i = 1, opt%nparts
                 do k = 1,3
@@ -120,7 +124,9 @@ subroutine accel_update(opt, parts)
                 else 
                         opt%time_step = opt%tunit
                 end if 
-        end if 
+        end if
+        print *, "Finished calculating acceleration"
+        call get_elapsed_time(time1) 
 end subroutine
 
 ! update velocities 
@@ -129,10 +135,27 @@ subroutine velocity_update(opt, parts)
         implicit none
         type(Options), intent(in) :: opt
         type(Particle), dimension(:), intent(inout) :: parts
+        real(8), dimension(3) :: delta 
+        real(8) :: dkin, dkin_min, dkin_max, dkin_ave
         integer :: i
+        real(8) :: time1
+        time1 = init_time()
+        dkin_max = 0
+        dkin_min = HUGE(dkin_min)
+        dkin_ave = 0
         do i = 1, opt%nparts
-                parts(i)%velocity = parts(i)%velocity + parts(i)%accel * opt%time_step
+                delta = parts(i)%accel * opt%time_step
+                dkin = (delta(1)**2.0+delta(2)**2.0+delta(3)**2.0)
+                parts(i)%velocity = parts(i)%velocity + delta 
+                dkin = dkin/(parts(i)%velocity(1)**2.0+parts(i)%velocity(2)**2.0+parts(i)%velocity(3)**2.0)
+                dkin_min = min(dkin_min,dkin)
+                dkin_max = max(dkin_max,dkin)
+                dkin_ave = dkin_ave + dkin
         end do
+        dkin_ave = dkin_ave / opt%nparts 
+        print *, "Finished calculating velocity"
+        print *, "Particles specic kinetic energy changed by [min,ave,max]", dkin_min, dkin_ave, dkin_max
+        call get_elapsed_time(time1) 
 end subroutine
 ! update positions 
 subroutine position_update(opt, parts)
@@ -144,6 +167,8 @@ subroutine position_update(opt, parts)
         real(8), dimension(opt%nparts) :: rads
         real(8) :: rad_average, rmin, rmax
         integer :: i
+        real(8) :: time1 
+        time1 = init_time()
         rad_average = 0
         !print *, "Looking at position update"
         do i = 1, opt%nparts
@@ -153,10 +178,12 @@ subroutine position_update(opt, parts)
                 parts(i)%position = parts(i)%position + parts(i)%velocity * opt%time_step * opt%vlunittolunit
                 call period_wrap(opt, parts(i)%position)
         end do
-        !rmin = minval(rads)
-        !rmax = maxval(rads)
-        !print *, opt%nparts, rmin, rmax, rmin/opt%nparts**(1.0/3.0), rmax/opt%nparts**(1.0/3.0)
-        !print *, rad_average/opt%nparts, rad_average/opt%nparts/opt%nparts**(1.0/3.0)
+        rad_average = rad_average/opt%nparts
+        rmin = minval(rads)
+        rmax = maxval(rads)
+        print *, "Finished calculating position"
+        print *, "Particles moved by [min,ave,max]", rmin, rad_average, rmax
+        call get_elapsed_time(time1) 
 end subroutine
 
 ! write out the nbody information 
